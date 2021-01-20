@@ -1,55 +1,16 @@
-from random import *
-import time
-import datetime
-
-values = []
-
-for number in range(100):
-  values.append(randrange(100)/100)
-  #values.append(number)
-
-channelsUrl = "https://localhost:44332/api/Channels"
-inputFileUrl = "https://localhost:44332/api/File"
-
-currentDate = datetime.datetime.now()
-date = currentDate.strftime("%Y.%m.%d")
-fileName = "proba_file.json"
-
+import sys
 import json
 import requests
+import datetime
+import base64
 
-file = {
-  "name": fileName,
-  "date": date,
-  "end": "true"
-}
+#TODO optional port argument
 
-r = requests.post(inputFileUrl, json=file, verify=False)
+#section_name = sys.argv[1]
 
-index = 0
-while index < len(values):
-  buffer = []
-  for i in range(5):
-    buffer.append(values[index])
-    index = index + 1
+#url = "https://localhost:44304/"
+url = "https://192.168.1.33:5001/"
 
-  channel = {
-    "inputFileName": fileName,
-    "name": "proba",
-    "values": buffer
-  }
+response = requests.post(url + "api/Section?date=" + str(datetime.datetime.now()), verify=False)
 
-  r = requests.post(channelsUrl, json=channel, verify=False)
-
-  time.sleep(0.1)
-
-
-file = {
-  "name": fileName,
-  "date": date,
-  "end": "true"
-}
-
-r = requests.post(inputFileUrl, json=file, verify=False)
-
-print("end")
+print(response)
