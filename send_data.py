@@ -51,7 +51,7 @@ while True:
         if successfull == False:
           print("An error occurred while sending data")
           
-      print("Data sended successfully")
+      print("Data sent successfully")
 
       time.sleep(WAIT_BETWEEN_SENDING)
       buffer = []
