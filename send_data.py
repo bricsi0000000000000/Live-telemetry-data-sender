@@ -42,7 +42,6 @@ while True:
       successfull = False
       while successfull == False:
         try:
-          print(str(buffer))
           send_yaw_angle_response = requests.post(URL + "api/YawAngle?values=" + str(buffer) + "&sectionID=" + str(live_section_id), verify = False)
           successfull = send_yaw_angle_response.status_code == HTTP_STATUS_CODE_OK
         except:
@@ -57,5 +56,5 @@ while True:
       buffer = []
     else:
       if yaw_angle_index < len(yaw_angle):
-        buffer.append({"value" : yaw_angle[yaw_angle_index]})
+        buffer.append({"value" : yaw_angle[yaw_angle_index], "name" : "yaw_angle"})
         yaw_angle_index = yaw_angle_index + 1
