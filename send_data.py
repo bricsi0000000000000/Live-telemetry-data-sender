@@ -2,41 +2,86 @@ import requests
 import datetime
 import time
 import json
+import warnings
 
-#TODO config file: IP address, port, sleep_time.
+# ---------------------CONFIGURATION-------------------------------------------
+configuration = json.loads(open("configuration.json", "r").read())
 
-HTTP_STATUS_CODE_OK = 200
-WAIT_BETWEEN_TRIES = 5 # in seconds
-WAIT_BETWEEN_SENDING = 5 # in seconds
-MAX_BUFFER_SIZE = 5
-URL = "http://192.168.1.33:5000/"
+if configuration['ignore_warnings'] == True:
+  warnings.filterwarnings("ignore")
+
+HTTP_STATUS_CODE_OK = int(configuration['HTTP_status_code_ok'])
+WAIT_BETWEEN_TRIES = int(configuration['wait_between_tries']) # in seconds
+WAIT_BETWEEN_SENDING = int(configuration['wait_between_sending']) # in seconds
+MAX_BUFFER_SIZE = int(configuration['max_buffer_size'])
+GET_LIVE_SECTION_API_CALL = configuration['get_live_section_api_call']
+POST_PACKAGE_API_CALL = configuration['post_package_api_call']
+URL = "{0}://{1}:{2}/".format('https' if configuration['isHTTPS'] == True else 'http',
+                              configuration['url'],
+                              configuration['port'])
+# -----------------------------------------------------------------------------
 
 can_send_data = False
 
 live_section_id = -1
 
-yaw_angle = []
-yaw_angle_index = 0
+# ---------------------SENSOR DATA---------------------------------------------
+times = []
+times_index = 0
+times_buffer = []
 
-speed = []
-speed_index = 0
+speeds = []
+speeds_index = 0
+speeds_buffer = []
 
 buffer_size = 0
-buffer = []
 
-file = open("yaw_angle", "r")
+package_ID = 0;
+package = ""
+# -----------------------------------------------------------------------------
+
+# ---------------------TEMPORARY DATA COLLECTION SIMULATION--------------------
+file = open("time", "r")
 input = file.read()
 for data in input.split(';'):
-  yaw_angle.append(float(data.replace(' ','').replace(',','.')))
+  times.append(float(data.replace(' ','').replace(',','.')))
 
 file = open("speed", "r")
 input = file.read()
 for data in input.split(';'):
-  speed.append(float(data.replace(' ','').replace(',','.')))
+  speeds.append(float(data.replace(' ','').replace(',','.')))
+# -----------------------------------------------------------------------------
 
+# ---------------------CREATE PACKAGE------------------------------------------
+def MakePackage():
+  global package
+  converted_speeds = []
+  for current_speed in speeds_buffer:
+    converted_speeds.append(current_speed)
+
+  converted_times = []
+  for current_time in times_buffer:
+    converted_times.append(current_time)
+
+  package = """
+  {{
+    "id": {0},
+    "sectionID": {1},
+    "speeds": [
+      {2}
+    ],
+    "times": [
+      {3}
+    ]
+  }}
+  """.format(package_ID, live_section_id, str(converted_speeds)[1:len(str(converted_speeds))-1], str(converted_times)[1:len(str(converted_times)) - 1])
+  package = package.replace("'","\"")
+# -----------------------------------------------------------------------------
+
+# ---------------------COLLECTING AND SENDING DATA-----------------------------
 while True:
   try:
-    section_get_request = requests.get(URL + "api/Section/live", verify = False)
+    section_get_request = requests.get(URL + GET_LIVE_SECTION_API_CALL, verify = False)
     if section_get_request.status_code == HTTP_STATUS_CODE_OK:
       can_send_data = True
       try:
@@ -52,27 +97,34 @@ while True:
     time.sleep(WAIT_BETWEEN_TRIES)
     
   if(can_send_data == True):
-    if len(buffer) == MAX_BUFFER_SIZE:
+    if len(times_buffer) == MAX_BUFFER_SIZE:
+      MakePackage()
       successfull = False
       while successfull == False:
         try:
-          #send_yaw_angle_response = requests.post(URL + "api/YawAngle?values=" + str(buffer) + "&sectionID=" + str(live_section_id) + "&sentTime=" + str(datetime.datetime.now()), verify = False)
-          send_yaw_angle_response = requests.post(URL + "api/Package?package=" + str(buffer) + "&sectionID=" + str(live_section_id) + "&sentTime=" + str(datetime.datetime.now()), verify = False)
-          successfull = send_yaw_angle_response.status_code == HTTP_STATUS_CODE_OK
+          send_package_response = requests.post(URL + POST_PACKAGE_API_CALL + package, verify = False)
+          successfull = send_package_response.status_code == HTTP_STATUS_CODE_OK
         except Exception as e:
           print("Can't send data.. " + str(e.__class__))
           time.sleep(WAIT_BETWEEN_TRIES)
           
         if successfull == False:
-          print("An error occurred while sending data")
+          print("An error occurred while sending package")
 
       if successfull == True:    
-        print("Data sent successfully")
+        print("Package sent successfully")
 
       time.sleep(WAIT_BETWEEN_SENDING)
-      buffer = []
+      times_buffer = []
+      speed_buffer = []
+      package_ID = package_ID + 1
     else:
-      if yaw_angle_index < len(yaw_angle):
-        #buffer.append({"value" : yaw_angle[yaw_angle_index], "name" : "yaw_angle"})
-        buffer.append({"name" : "yaw_angle", "value" : yaw_angle[yaw_angle_index]})
-        yaw_angle_index = yaw_angle_index + 1
+      # COLLECTING DATA | TODO: later replace with CAN communication
+      if times_index < len(times):
+        times_buffer.append({"id" : times_index, "package_ID" : package_ID, "value" : times[times_index]})
+        times_index = times_index + 1
+      
+      if speeds_index < len(speeds):
+        speeds_buffer.append({"id" : speeds_index, "package_ID" : package_ID, "value" : speeds[speeds_index]})
+        speeds_index = speeds_index + 1
+# -----------------------------------------------------------------------------
