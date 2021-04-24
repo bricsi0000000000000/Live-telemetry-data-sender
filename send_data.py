@@ -1,5 +1,5 @@
 import requests
-import datetime
+from datetime import datetime
 import time
 import json
 import warnings
@@ -46,12 +46,16 @@ input = file.read()
 for data in input.split(';'):
   times.append(float(data.replace(' ','').replace(',','.')))
 
-file = open("speed", "r")
+file = open("speed_from_db", "r")
 input = file.read()
 for data in input.split(';'):
   speeds.append(float(data.replace(' ','').replace(',','.')))
 # -----------------------------------------------------------------------------
-
+'''
+import matplotlib.pyplot as plt
+plt.plot(speeds)
+plt.savefig('speeds.png')
+'''
 # ---------------------CREATE PACKAGE------------------------------------------
 def MakePackage():
   global package
@@ -65,8 +69,8 @@ def MakePackage():
 
   package = """
   {{
-    "id": {0},
-    "sectionID": {1},
+    "sectionID": {0},
+    "sentTime": {1},
     "speeds": [
       {2}
     ],
@@ -74,8 +78,9 @@ def MakePackage():
       {3}
     ]
   }}
-  """.format(package_ID, live_section_id, str(converted_speeds)[1:len(str(converted_speeds))-1], str(converted_times)[1:len(str(converted_times)) - 1])
+  """.format(live_section_id, str(datetime.now().timestamp()), str(converted_speeds)[1:len(str(converted_speeds))-1], str(converted_times)[1:len(str(converted_times)) - 1])
   package = package.replace("'","\"")
+  #print(package)
 # -----------------------------------------------------------------------------
 
 # ---------------------COLLECTING AND SENDING DATA-----------------------------
@@ -117,14 +122,13 @@ while True:
       time.sleep(WAIT_BETWEEN_SENDING)
       times_buffer = []
       speed_buffer = []
-      package_ID = package_ID + 1
     else:
       # COLLECTING DATA | TODO: later replace with CAN communication
       if times_index < len(times):
-        times_buffer.append({"id" : times_index, "package_ID" : package_ID, "value" : times[times_index]})
+        times_buffer.append({"id" : times_index, "value" : times[times_index]})
         times_index = times_index + 1
       
       if speeds_index < len(speeds):
-        speeds_buffer.append({"id" : speeds_index, "package_ID" : package_ID, "value" : speeds[speeds_index]})
+        speeds_buffer.append({"id" : speeds_index, "value" : speeds[speeds_index]})
         speeds_index = speeds_index + 1
 # -----------------------------------------------------------------------------
