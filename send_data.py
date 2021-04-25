@@ -5,7 +5,7 @@ import json
 import warnings
 
 # ---------------------CONFIGURATION-------------------------------------------
-configuration = json.loads(open("configuration.json", "r").read())
+configuration = json.loads(open("configuration_files/configuration.json", "r").read())
 
 if configuration['ignore_warnings'] == True:
   warnings.filterwarnings("ignore")
@@ -41,12 +41,12 @@ package = ""
 # -----------------------------------------------------------------------------
 
 # ---------------------TEMPORARY DATA COLLECTION SIMULATION--------------------
-file = open("time", "r")
+file = open("data_files/time", "r")
 input = file.read()
 for data in input.split(';'):
   times.append(float(data.replace(' ','').replace(',','.')))
 
-file = open("speed_from_db", "r")
+file = open("data_files/speed", "r")
 input = file.read()
 for data in input.split(';'):
   speeds.append(float(data.replace(' ','').replace(',','.')))
