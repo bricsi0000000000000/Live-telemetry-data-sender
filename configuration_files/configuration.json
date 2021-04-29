@@ -1,7 +1,7 @@
 {
   "HTTP_status_code_ok" : 200,
   "wait_between_tries" : 5,
-  "wait_between_sending" : 5,
+  "wait_between_sending" : 2,
   "max_buffer_size" : 5,
   "isHTTPS" : false,
   "url" : "192.168.1.33",
