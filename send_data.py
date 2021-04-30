@@ -37,21 +37,42 @@ speeds = []
 speeds_index = 0
 speeds_buffer = []
 
+yaws = []
+yaws_index = 0
+yaws_buffer = []
+
 buffer_size = 0
 
 package_ID = 0;
 # ------------------------------------------------------------------------------------------------------------------------------
 
 # ---------------------TEMPORARY DATA COLLECTION SIMULATION---------------------------------------------------------------------
-file = open("data_files/time", "r")
-input = file.read()
-for data in input.split(';'):
-  times.append(float(data.replace(' ','').replace(',','.')))
+file = open("data_files/Time", "r")
+input = file.read().split("\n")
+for index in range(len(input)):
+  if index > 6900:
+    if input[index] != '':
+      times.append(float(input[index]))
+  else:
+    index = index + 1
 
 file = open("data_files/speed", "r")
-input = file.read()
-for data in input.split(';'):
-  speeds.append(float(data.replace(' ','').replace(',','.')))
+input = file.read().split("\n")
+for index in range(len(input)):
+  if index > 6900:
+    if input[index] != '':
+      speeds.append(float(input[index]))
+  else:
+    index = index + 1
+
+file = open("data_files/Yaw", "r")
+input = file.read().split("\n")
+for index in range(len(input)):
+  if index > 6900:
+    if input[index] != '':
+      yaws.append(float(input[index]))
+  else:
+    index = index + 1
 
 #print(len(speeds))
 # ------------------------------------------------------------------------------------------------------------------------------
@@ -66,14 +87,17 @@ def MakePackage():
   {{
     "sectionID": {0},
     "sentTime": {1},
-    "speeds": [
+    "speedValues": [
       {2}
     ],
-    "times": [
+    "timeValues": [
       {3}
+    ],
+    "yawValues": [
+      {4}
     ]
   }}
-  """.format(live_section_id, str(datetime.now().timestamp()), str(speeds_buffer)[1:len(str(speeds_buffer))-1], str(times_buffer)[1:len(str(times_buffer)) - 1])
+  """.format(live_section_id, str(datetime.now().timestamp()), str(speeds_buffer)[1:len(str(speeds_buffer))-1], str(times_buffer)[1:len(str(times_buffer)) - 1], str(yaws_buffer)[1:len(str(yaws_buffer)) - 1])
   package = package.replace("'","\"")
   #print(package)
   return package
@@ -116,6 +140,8 @@ while stop_sending_data == False:
             
           if successfull == False:
             print("An error occurred while sending package [" + str(package_ID) + "]. HTTP status code: " + str(send_package_response.status_code))
+            time.sleep(WAIT_BETWEEN_TRIES)
+        
 
         if successfull == True:    
           print("Package [" + str(package_ID) + "] sent successfully to section [" + str(live_section_id) + "]")
@@ -133,6 +159,10 @@ while stop_sending_data == False:
         if speeds_index < len(speeds):
           speeds_buffer.append({"value" : speeds[speeds_index]})
           speeds_index = speeds_index + 1
+
+        if yaws_index < len(yaws):
+           yaws_buffer.append({"value" : yaws[yaws_index]})
+           yaws_index = yaws_index + 1
 # ------------------------------------------------------------------------------------------------------------------------------
 
 print("------------------------")
