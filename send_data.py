@@ -47,34 +47,36 @@ package_ID = 0;
 # ------------------------------------------------------------------------------------------------------------------------------
 
 # ---------------------TEMPORARY DATA COLLECTION SIMULATION---------------------------------------------------------------------
-file = open("data_files/Time", "r")
+file = open("data_files/vx", "r")
 input = file.read().split("\n")
 for index in range(len(input)):
-  if index > 6900:
+  if index > 0:
     if input[index] != '':
       times.append(float(input[index]))
   else:
     index = index + 1
 
-file = open("data_files/speed", "r")
+file = open("data_files/yawrate", "r")
 input = file.read().split("\n")
 for index in range(len(input)):
-  if index > 6900:
+  if index > 0:
     if input[index] != '':
       speeds.append(float(input[index]))
   else:
     index = index + 1
 
-file = open("data_files/Yaw", "r")
+file = open("data_files/delta_tar", "r")
 input = file.read().split("\n")
 for index in range(len(input)):
-  if index > 6900:
+  if index > 0:
     if input[index] != '':
       yaws.append(float(input[index]))
   else:
     index = index + 1
 
+#print(len(times))
 #print(len(speeds))
+#print(len(yaws))
 # ------------------------------------------------------------------------------------------------------------------------------
 '''
 import matplotlib.pyplot as plt
@@ -149,16 +151,17 @@ while stop_sending_data == False:
         time.sleep(WAIT_BETWEEN_SENDING)
         times_buffer = []
         speeds_buffer = []
+        yaws_buffer = []
         package_ID = package_ID + 1
       else:
         # COLLECTING DATA | TODO: later replace with CAN communication
         if times_index < len(times):
-          times_buffer.append({"value" : times[times_index]})
-          times_index = times_index + 1
+           times_buffer.append({"value" : times[times_index]})
+           times_index = times_index + 1
         
         if speeds_index < len(speeds):
-          speeds_buffer.append({"value" : speeds[speeds_index]})
-          speeds_index = speeds_index + 1
+           speeds_buffer.append({"value" : speeds[speeds_index]})
+           speeds_index = speeds_index + 1
 
         if yaws_index < len(yaws):
            yaws_buffer.append({"value" : yaws[yaws_index]})
